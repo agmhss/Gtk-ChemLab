@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Chemistry Lab</title>
+
+    <style>
+        /* --- EMBEDDED CSS STYLING --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e8f5e9; /* Light green background */
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00796b; /* Teal color */
+            margin-bottom: 25px;
+        }
+
+        .lab-setup {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .chemical-input {
+            padding: 15px;
+            background-color: #f1f8e9;
+            border-radius: 10px;
+            width: 45%;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 1.1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #00bcd4; /* Cyan blue */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #0097a7;
+        }
+
+        /* --- RESULTS AREA --- */
+        .reaction-results {
+            margin-top: 30px;
+            border-top: 2px dashed #b2dfdb;
+            padding-top: 20px;
+            text-align: left;
+        }
+
+        .equation {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #388e3c; /* Dark green */
+            background-color: #e0f2f1;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+
+        .observation {
+            font-size: 1.1em;
+            color: #d32f2f; /* Red for observation */
+        }
+        
+        .placeholder {
+            color: #9e9e9e;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🧪 Virtual Double Displacement Reaction Lab</h1>
+
+        <div class="lab-setup">
+            <div class="chemical-input">
+                <h3>Select Salt Solution (Reactant 1)</h3>
+                <select id="salt">
+                    <option value="">-- Choose Salt --</option>
+                    <option value="AgNO3">Silver Nitrate (AgNO₃)</option>
+                    <option value="CuSO4">Copper Sulfate (CuSO₄)</option>
+                    <option value="NaCl">Sodium Chloride (NaCl)</option>
+                    <option value="KNO3">Potassium Nitrate (KNO₃)</option>
+                </select>
+            </div>
+            
+            <div class="chemical-input">
+                <h3>Select Base Solution (Reactant 2)</h3>
+                <select id="base">
+                    <option value="">-- Choose Base --</option>
+                    <option value="NaOH">Sodium Hydroxide (NaOH)</option>
+                    <option value="KOH">Potassium Hydroxide (KOH)</option>
+                    <option value="Ba(OH)2">Barium Hydroxide (Ba(OH)₂)</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="mixChemicals()">Mix in Test Tube</button>
+
+        <div class="reaction-results">
+            <h2>Reaction Results</h2>
+            <div id="equation-output" class="equation placeholder">
+                The balanced chemical equation will appear here.
+            </div>
+            <p class="observation">
+                **Observation:** <span id="observation-output" class="placeholder">Select two chemicals and click Mix.</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // --- EMBEDDED JAVASCRIPT LOGIC ---
+
+        // Simple database of simulated Double Displacement Reactions (Salt + Base)
+        // Key is 'Salt_Base'
+        const reactions = {
+            // Salt: Silver Nitrate (AgNO₃)
+            'AgNO3_NaOH': { equation: "AgNO₃ + NaOH → AgOH(s) + NaNO₃", observation: "A brown/black precipitate (AgOH) forms immediately." },
+            'AgNO3_KOH': { equation: "AgNO₃ + KOH → AgOH(s) + KNO₃", observation: "A brown/black precipitate (AgOH) forms immediately." },
+            'AgNO3_Ba(OH)2': { equation: "2AgNO₃ + Ba(OH)₂ → 2AgOH(s) + Ba(NO₃)₂", observation: "A brown/black precipitate (AgOH) forms immediately." },
+
+            // Salt: Copper Sulfate (CuSO₄)
+            'CuSO4_NaOH': { equation: "CuSO₄ + 2NaOH → Cu(OH)₂(s) + Na₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color." },
+            'CuSO4_KOH': { equation: "CuSO₄ + 2KOH → Cu(OH)₂(s) + K₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color." },
+            'CuSO4_Ba(OH)2': { equation: "CuSO₄ + Ba(OH)₂ → Cu(OH)₂(s) + BaSO₄(s)", observation: "Two precipitates (blue Cu(OH)₂ and white BaSO₄) form." },
+
+            // Salt: Sodium Chloride (NaCl) - Generally non-reactive with these bases in simple lab settings
+            'NaCl_NaOH': { equation: "NaCl + NaOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water." },
+            'NaCl_KOH': { equation: "NaCl + KOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water." },
+            'NaCl_Ba(OH)2': { equation: "2NaCl + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water." },
+            
+            // Salt: Potassium Nitrate (KNO₃) - Generally non-reactive
+            'KNO3_NaOH': { equation: "KNO₃ + NaOH → No observable reaction (NR)", observation: "No visible change. All products are soluble." },
+            'KNO3_KOH': { equation: "KNO₃ + KOH → No observable reaction (NR)", observation: "No visible change. All products are soluble." },
+            'KNO3_Ba(OH)2': { equation: "2KNO₃ + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. All products are soluble." },
+
+            // Catch-all non-reaction case for safety
+            'DEFAULT_NR': { equation: "Reactant 1 + Reactant 2 → No Reaction", observation: "Ensure both chemicals are selected to observe a change." }
+        };
+
+        function mixChemicals() {
+            const saltElement = document.getElementById('salt');
+            const baseElement = document.getElementById('base');
+            const equationOutput = document.getElementById('equation-output');
+            const observationOutput = document.getElementById('observation-output');
+
+            const salt = saltElement.value;
+            const base = baseElement.value;
+
+            // Check if both chemicals are selected
+            if (!salt || !base) {
+                equationOutput.textContent = reactions['DEFAULT_NR'].equation;
+                observationOutput.textContent = reactions['DEFAULT_NR'].observation;
+                equationOutput.classList.add('placeholder');
+                observationOutput.classList.add('placeholder');
+                return;
+            }
+
+            // Create the lookup key
+            const key = `${salt}_${base}`;
+            const result = reactions[key] || reactions['DEFAULT_NR'];
+            
+            // Clear placeholder style
+            equationOutput.classList.remove('placeholder');
+            observationOutput.classList.remove('placeholder');
+
+            // Update the display
+            equationOutput.textContent = result.equation;
+            observationOutput.textContent = result.observation;
+            
+            // Optional: Visually highlight the test tube (simulated)
+            document.querySelector('.lab-setup').style.border = '2px solid #d32f2f';
+            setTimeout(() => {
+                document.querySelector('.lab-setup').style.border = 'none';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
