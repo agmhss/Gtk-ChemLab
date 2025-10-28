@@ -146,7 +146,6 @@
             box-shadow: 0 0 15px rgba(244, 67, 54, 0.7);
         }
 
-
         /* --- RESULTS AREA --- */
         .reaction-results {
             margin-top: 30px;
@@ -198,12 +197,12 @@
                 <h3>Select Cation/Anion Test Solution (Reactant 1)</h3>
                 <select id="salt">
                     <option value="">-- Choose Reactant 1 (Salt/Reagent) --</option>
-                    <option value="AgNO3">Silver Nitrate ($\text{AgNO}_3$)</option>
-                    <option value="CuSO4">Copper Sulfate ($\text{CuSO}_4$)</option>
-                    <option value="Pb(NO3)2">Lead Nitrate ($\text{Pb}(\text{NO}_3)_2$)</option>
-                    <option value="BaCl2">Barium Chloride ($\text{BaCl}_2$)</option>
-                    <option value="NaCl">Sodium Chloride ($\text{NaCl}$)</option>
-                    <option value="KNO3">Potassium Nitrate ($\text{KNO}_3$)</option>
+                    <option value="AgNO3">Silver Nitrate (AgNO₃)</option>
+                    <option value="CuSO4">Copper Sulfate (CuSO₄)</option>
+                    <option value="Pb(NO3)2">Lead Nitrate (Pb(NO₃)₂)</option>
+                    <option value="BaCl2">Barium Chloride (BaCl₂)</option>
+                    <option value="NaCl">Sodium Chloride (NaCl)</option>
+                    <option value="KNO3">Potassium Nitrate (KNO₃)</option>
                 </select>
             </div>
             
@@ -211,11 +210,11 @@
                 <h3>Select Reagent Solution (Reactant 2)</h3>
                 <select id="base">
                     <option value="">-- Choose Reactant 2 (Base/Reagent) --</option>
-                    <option value="NaOH">Sodium Hydroxide ($\text{NaOH}$)</option>
-                    <option value="KOH">Potassium Hydroxide ($\text{KOH}$)</option>
-                    <option value="KI">Potassium Iodide ($\text{KI}$)</option>
-                    <option value="Na2SO4">Sodium Sulfate ($\text{Na}_2\text{SO}_4$)</option>
-                    <option value="Ba(OH)2">Barium Hydroxide ($\text{Ba}(\text{OH})_2$)</option>
+                    <option value="NaOH">Sodium Hydroxide (NaOH)</option>
+                    <option value="KOH">Potassium Hydroxide (KOH)</option>
+                    <option value="KI">Potassium Iodide (KI)</option>
+                    <option value="Na2SO4">Sodium Sulfate (Na₂SO₄)</option>
+                    <option value="Ba(OH)2">Barium Hydroxide (Ba(OH)₂)</option>
                 </select>
             </div>
         </div>
@@ -242,33 +241,63 @@
 
     <script>
         // --- EMBEDDED JAVASCRIPT LOGIC ---
+        
+        // Custom function to format chemical formulas: Replaces numbers following letters (and not followed by letters) with a subscript
+        // E.g., H2SO4 -> H₂SO₄
+        function formatChemicalFormula(text) {
+            // 1. Remove all LaTeX-specific symbols like $ and \text{}
+            let cleanText = text.replace(/(\$|\\text\{|\})/g, '');
+            
+            // 2. Format common phase symbols (s)
+            cleanText = cleanText.replace(/\(s\)/g, '<span style="font-size: 0.9em; color: #666; font-style: italic;">(s)</span>');
+            
+            // 3. Format coefficients (e.g., 2AgNO3)
+            cleanText = cleanText.replace(/(\d+)([A-Z])/g, (match, p1, p2) => {
+                // p1 is the number (coefficient), p2 is the letter
+                return `<span style="font-size:1.1em;">${p1}</span>${p2}`;
+            });
 
+            // 4. Format subscripts: look for a capital letter followed by a digit.
+            // This is a simple regex that captures numbers following letters for subscripting.
+            cleanText = cleanText.replace(/([A-Za-z)])(\d+)/g, (match, p1, p2) => {
+                // p1 is the preceding letter/bracket, p2 is the number
+                return `${p1}<sub>${p2}</sub>`;
+            });
+            
+            // 5. Replace -> with the proper arrow
+            cleanText = cleanText.replace(/\s*->\s*/g, ' → ');
+            
+            return cleanText;
+        }
+
+        // Updated reaction database with simplified equation strings (no LaTeX math environment)
         const reactions = {
-            // ORIGINAL REACTIONS (Brown/Black AgOH and Blue Cu(OH)2)
-            'AgNO3_NaOH': { equation: "\\text{AgNO}_3 + \\text{NaOH} \\rightarrow \\text{AgOH}(\\text{s}) + \\text{NaNO}_3", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
-            'CuSO4_KOH': { equation: "\\text{CuSO}_4 + 2\\text{KOH} \\rightarrow \\text{Cu}(\\text{OH})_2(\\text{s}) + \\text{K}_2\\text{SO}_4", observation: "A bright blue precipitate $(\\text{Cu}(\\text{OH})_2)$ forms.", visual: { precipitate: '#00BFFF', liquid: '#ADD8E6' } },
+            // The equation strings now use common notation for the simple formatting function
+            
+            // ORIGINAL REACTIONS
+            'AgNO3_NaOH': { equation: "AgNO3 + NaOH -> AgOH(s) + NaNO3", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
+            'CuSO4_KOH': { equation: "CuSO4 + 2KOH -> Cu(OH)2(s) + K2SO4", observation: "A bright blue precipitate (Cu(OH)2) forms.", visual: { precipitate: '#00BFFF', liquid: '#ADD8E6' } },
 
             // --- NEW +1/+2 REACTIONS (TN STATE BOARD RELEVANT) ---
-
-            // 1. Lead Test (Iodide Anion Test) -> Yellow Precipitate
-            'Pb(NO3)2_KI': { equation: "\\text{Pb}(\\text{NO}_3)_2 + 2\\text{KI} \\rightarrow \\text{PbI}_2(\\text{s}) + 2\\text{KNO}_3", observation: "Formation of a striking yellow precipitate $(\\text{PbI}_2)$. Used to test for Lead ions.", visual: { precipitate: '#FFD700', liquid: '#FFFFFF' } },
+            // 1. Lead Test -> Yellow Precipitate
+            'Pb(NO3)2_KI': { equation: "Pb(NO3)2 + 2KI -> PbI2(s) + 2KNO3", observation: "Formation of a striking yellow precipitate (PbI2). Used to test for Lead ions.", visual: { precipitate: '#FFD700', liquid: '#FFFFFF' } },
             
             // 2. Sulfate Anion Test (using BaCl2) -> White Precipitate
-            'Na2SO4_BaCl2': { equation: "\\text{Na}_2\\text{SO}_4 + \\text{BaCl}_2 \\rightarrow \\text{BaSO}_4(\\text{s}) + 2\\text{NaCl}", observation: "Formation of a dense white precipitate $(\\text{BaSO}_4)$, insoluble in acids. Confirms the Sulfate ion.", visual: { precipitate: '#F0F8FF', liquid: '#ADD8E6' } },
+            'Na2SO4_BaCl2': { equation: "Na2SO4 + BaCl2 -> BaSO4(s) + 2NaCl", observation: "Formation of a dense white precipitate (BaSO4), insoluble in acids. Confirms the Sulfate ion.", visual: { precipitate: '#F0F8FF', liquid: '#ADD8E6' } },
             
             // 3. Chloride Anion Test (using AgNO3) -> White Curdy Precipitate
-            'NaCl_AgNO3': { equation: "\\text{NaCl} + \\text{AgNO}_3 \\rightarrow \\text{AgCl}(\\text{s}) + \\text{NaNO}_3", observation: "Formation of a curdy white precipitate $(\\text{AgCl})$, soluble in Ammonium Hydroxide. Confirms Chloride ion.", visual: { precipitate: '#F5F5F5', liquid: '#ADD8E6' } },
+            'NaCl_AgNO3': { equation: "NaCl + AgNO3 -> AgCl(s) + NaNO3", observation: "Formation of a curdy white precipitate (AgCl), soluble in Ammonium Hydroxide. Confirms Chloride ion.", visual: { precipitate: '#F5F5F5', liquid: '#ADD8E6' } },
             
             // 4. Barium Test (using Sulfate) -> White Precipitate
-            'BaCl2_Na2SO4': { equation: "\\text{BaCl}_2 + \\text{Na}_2\\text{SO}_4 \\rightarrow \\text{BaSO}_4(\\text{s}) + 2\\text{NaCl}", observation: "Formation of a white precipitate $(\\text{BaSO}_4)$, confirms the Barium ion.", visual: { precipitate: '#F0F8FF', liquid: '#ADD8E6' } },
+            'BaCl2_Na2SO4': { equation: "BaCl2 + Na2SO4 -> BaSO4(s) + 2NaCl", observation: "Formation of a white precipitate (BaSO4), confirms the Barium ion.", visual: { precipitate: '#F0F8FF', liquid: '#ADD8E6' } },
             
-            // 5. Lead Hydroxide Precipitate
-            'Pb(NO3)2_NaOH': { equation: "\\text{Pb}(\\text{NO}_3)_2 + 2\\text{NaOH} \\rightarrow \\text{Pb}(\\text{OH})_2(\\text{s}) + 2\\text{NaNO}_3", observation: "Formation of a chalky white precipitate $(\\text{Pb}(\\text{OH})_2)$, soluble in excess $\\text{NaOH}$.", visual: { precipitate: '#FFFFFF', liquid: '#F5F5F5' } },
+            // 5. Lead Hydroxide Precipitate (The one in your screenshot)
+            'Pb(NO3)2_NaOH': { equation: "Pb(NO3)2 + 2NaOH -> Pb(OH)2(s) + 2NaNO3", observation: "Formation of a chalky white precipitate (Pb(OH)2), soluble in excess NaOH.", visual: { precipitate: '#FFFFFF', liquid: '#F5F5F5' } },
 
-            // --- NON-REACTIONS (Critical for the syllabus) ---
-            'NaCl_KOH': { equation: "\\text{NaCl} + \\text{KOH} \\rightarrow \\text{No observable reaction (NR)}", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
-            'KNO3_BaCl2': { equation: "\\text{KNO}_3 + \\text{BaCl}_2 \\rightarrow \\text{No observable reaction (NR)}", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
-            'DEFAULT_NR': { equation: "\\text{Reactant 1} + \\text{Reactant 2} \\rightarrow \\text{No Reaction}", observation: "Ensure both chemicals are selected to observe a change.", visual: { noReaction: true } }
+            // --- NON-REACTIONS ---
+            'NaCl_KOH': { equation: "NaCl + KOH -> No observable reaction (NR)", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
+            'KNO3_BaCl2': { equation: "KNO3 + BaCl2 -> No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
+            'DEFAULT_NR': { equation: "Reactant 1 + Reactant 2 -> No Reaction", observation: "Ensure both chemicals are selected to observe a change.", visual: { noReaction: true } }
         };
 
         function mixChemicals() {
@@ -283,7 +312,7 @@
             const salt = saltElement.value;
             const base = baseElement.value;
 
-            // Reset visual state and remove all animation classes
+            // Reset visual state
             testTubeContainer.classList.remove('shake-anim', 'no-reaction-flash');
             testTubeLiquid.style.backgroundColor = '#add8e6';
             testTubePrecipitate.style.height = '0';
@@ -293,7 +322,7 @@
             // Check if both chemicals are selected
             if (!salt || !base) {
                 const defaultResult = reactions['DEFAULT_NR'];
-                equationOutput.textContent = defaultResult.equation;
+                equationOutput.innerHTML = formatChemicalFormula(defaultResult.equation);
                 observationOutput.textContent = defaultResult.observation;
                 equationOutput.classList.add('placeholder');
                 observationOutput.classList.add('placeholder');
@@ -302,7 +331,7 @@
             }
 
             const key1 = `${salt}_${base}`;
-            const key2 = `${base}_${salt}`; // Check for reversed order in the database
+            const key2 = `${base}_${salt}`; 
 
             const result = reactions[key1] || reactions[key2] || reactions['DEFAULT_NR'];
             
@@ -315,57 +344,37 @@
 
             setTimeout(() => {
                 if (result.visual && result.visual.noReaction) {
-                    // Simulate no reaction
                     testTubeContainer.classList.add('no-reaction-flash'); 
                 } else if (result.visual) {
                     if (result.visual.liquid) {
-                        // Change bulk liquid color
                         testTubeLiquid.style.backgroundColor = result.visual.liquid;
                     }
                     if (result.visual.precipitate) {
-                        // Show precipitate (simulating a solid forming)
                         testTubePrecipitate.style.backgroundColor = result.visual.precipitate;
                         testTubePrecipitate.style.height = '20%';
                         testTubePrecipitate.style.opacity = '1';
                     }
                 }
                 
-                // Update the text results using LaTeX for chemical formatting
-                equationOutput.innerHTML = `$\\${result.equation}$`;
-                observationOutput.textContent = result.observation;
-
-                // Call a function to render the LaTeX after updating the text
-                renderMathInElement(equationOutput);
+                // --- CRITICAL: Format Equation Here ---
+                equationOutput.innerHTML = formatChemicalFormula(result.equation);
+                
+                // Update the Observation text. We still use the formatting function for the Observation for consistency.
+                const formattedObservation = formatChemicalFormula(result.observation);
+                // Remove any excess HTML tags that might be visually distracting in the observation text
+                observationOutput.innerHTML = formattedObservation.replace(/<span[^>]*>/g, '').replace(/<\/span>/g, '');
+                
 
             }, 300);
         }
         
-        // --- LaTeX Rendering Function (Requires MathJax/KaTeX, but we'll use a local function for this SAP) ---
-        // NOTE: Since this is an SAP, we need a library for proper LaTeX rendering (like KaTeX).
-        // Since we cannot inject a full library here, we simulate the rendering process
-        // by just replacing common LaTeX elements with HTML subscripts/superscripts.
-        function renderMathInElement(element) {
-            let html = element.innerHTML;
-            // Simple replacement for subscripts and superscripts in chemical formulas
-            html = html.replace(/(\\text\{(\w+)\})/g, '$2'); // Removes \text{}
-            html = html.replace(/_\{(\w+)\}/g, '<sub>$1</sub>'); // Subscript
-            html = html.replace(/\^\{(\w+)\}/g, '<sup>$1</sup>'); // Superscript (for charge, though rare in these examples)
-            html = html.replace(/\\rightarrow/g, '→');
-            html = html.replace(/\(s\)/g, '($\\text{s}$)');
-            html = html.replace(/\\ /g, ' '); // Remove extra space slash
-            
-            // Add a simple visual style for phase symbols
-            html = html.replace(/(\(\w\))/g, '<span style="font-size: 0.9em; color: #666; font-style: italic;">$1</span>'); 
-            
-            element.innerHTML = html;
-        }
-
-        // To make the initial equations look good on load
+        // To format the placeholder equation on load
         document.addEventListener('DOMContentLoaded', () => {
-             // Set default placeholder with basic formatting
-             document.getElementById('equation-output').innerHTML = "$\\text{Reactant 1} + \\text{Reactant 2} \\rightarrow \\text{Products}$";
-             renderMathInElement(document.getElementById('equation-output'));
-             
+             document.getElementById('equation-output').innerHTML = formatChemicalFormula("Reactant 1 + Reactant 2 -> Products");
+             // Also format the chemical names in the dropdowns for the user
+             document.getElementById('salt').options[2].innerHTML = formatChemicalFormula("Lead Nitrate (Pb(NO3)2)");
+             document.getElementById('base').options[4].innerHTML = formatChemicalFormula("Barium Hydroxide (Ba(OH)2)");
+             document.getElementById('base').options[3].innerHTML = formatChemicalFormula("Sodium Sulfate (Na2SO4)");
         });
     </script>
 </body>
