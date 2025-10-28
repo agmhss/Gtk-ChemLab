@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gtk-Chemistry Lab</title>
+    <title>Gtk - Virtual Chemistry Lab</title>
 
     <style>
         /* --- EMBEDDED CSS STYLING --- */
@@ -36,18 +36,18 @@
         .lab-setup {
             display: flex;
             justify-content: space-around;
-            align-items: flex-start; /* Align items to top */
+            align-items: flex-start;
             margin-bottom: 20px;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            flex-wrap: wrap;
         }
 
         .chemical-input {
             padding: 15px;
             background-color: #f1f8e9;
             border-radius: 10px;
-            width: 45%; /* Adjusted for better spacing with test tube */
-            min-width: 250px; /* Ensure readability */
-            margin-bottom: 15px; /* Spacing for wrap */
+            width: 45%;
+            min-width: 250px;
+            margin-bottom: 15px;
         }
 
         select {
@@ -81,22 +81,22 @@
             justify-content: center;
             align-items: center;
             margin: 20px 0;
-            min-height: 200px; /* Ensure space for test tube */
+            min-height: 200px;
         }
 
         .test-tube-container {
             position: relative;
-            width: 60px; /* Width of the tube */
-            height: 180px; /* Height of the tube */
+            width: 60px;
+            height: 180px;
             border: 3px solid #666;
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
             border-bottom-left-radius: 30px;
             border-bottom-right-radius: 30px;
-            background-color: rgba(255, 255, 255, 0.3); /* Transparent tube */
-            overflow: hidden; /* Keep liquid inside */
+            background-color: rgba(255, 255, 255, 0.3);
+            overflow: hidden;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s ease-out; /* For shake effect */
+            transition: transform 0.2s ease-out;
         }
 
         .liquid {
@@ -104,9 +104,9 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 70%; /* Initial liquid level */
-            background-color: #add8e6; /* Light blue (default solution color) */
-            transition: background-color 1.5s ease-out, height 0.5s ease-out; /* Smooth color change */
+            height: 70%;
+            background-color: #add8e6;
+            transition: background-color 1.5s ease-out, height 0.5s ease-out;
         }
 
         .precipitate {
@@ -114,8 +114,8 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 0; /* Starts hidden */
-            background-color: #8B4513; /* Brown (default precipitate color) */
+            height: 0;
+            background-color: #8B4513;
             transition: height 1.5s ease-out, background-color 1.5s ease-out;
             opacity: 0;
         }
@@ -136,18 +136,13 @@
         }
 
         .precipitate-anim .precipitate {
-            height: 20%; /* Precipitate rises */
+            height: 20%;
             opacity: 1;
         }
 
-        /* Liquid color changes */
-        .color-change-blue .liquid { background-color: #1E90FF; } /* DodgerBlue */
-        .color-change-brown .liquid { background-color: #8B4513; } /* SaddleBrown */
-        .color-change-clear .liquid { background-color: rgba(255, 255, 255, 0.7); } /* Near clear */
-
         /* No Reaction Visual */
         .no-reaction-flash {
-            border-color: #f44336 !important; /* Red border */
+            border-color: #f44336 !important;
             box-shadow: 0 0 15px rgba(244, 67, 54, 0.7);
         }
 
@@ -164,7 +159,7 @@
         .equation {
             font-size: 1.3em;
             font-weight: bold;
-            color: #388e3c; /* Dark green */
+            color: #388e3c;
             background-color: #e0f2f1;
             padding: 10px;
             border-radius: 5px;
@@ -174,7 +169,7 @@
 
         .observation {
             font-size: 1.1em;
-            color: #d32f2f; /* Red for observation */
+            color: #d32f2f;
         }
         
         .placeholder {
@@ -196,27 +191,31 @@
 <body>
 
     <div class="container">
-        <h1>🧪 Gtk-Virtual Chemistry Lab</h1>
+        <h1>🧪 Gtk - Virtual Chemistry Lab</h1>
 
         <div class="lab-setup">
             <div class="chemical-input">
-                <h3>Select Salt Solution (Reactant 1)</h3>
+                <h3>Select Cation/Anion Test Solution (Reactant 1)</h3>
                 <select id="salt">
-                    <option value="">-- Choose Salt --</option>
-                    <option value="AgNO3">Silver Nitrate (AgNO₃)</option>
-                    <option value="CuSO4">Copper Sulfate (CuSO₄)</option>
-                    <option value="NaCl">Sodium Chloride (NaCl)</option>
-                    <option value="KNO3">Potassium Nitrate (KNO₃)</option>
+                    <option value="">-- Choose Reactant 1 (Salt/Reagent) --</option>
+                    <option value="AgNO3">Silver Nitrate ($\text{AgNO}_3$)</option>
+                    <option value="CuSO4">Copper Sulfate ($\text{CuSO}_4$)</option>
+                    <option value="Pb(NO3)2">Lead Nitrate ($\text{Pb}(\text{NO}_3)_2$)</option>
+                    <option value="BaCl2">Barium Chloride ($\text{BaCl}_2$)</option>
+                    <option value="NaCl">Sodium Chloride ($\text{NaCl}$)</option>
+                    <option value="KNO3">Potassium Nitrate ($\text{KNO}_3$)</option>
                 </select>
             </div>
             
             <div class="chemical-input">
-                <h3>Select Base Solution (Reactant 2)</h3>
+                <h3>Select Reagent Solution (Reactant 2)</h3>
                 <select id="base">
-                    <option value="">-- Choose Base --</option>
-                    <option value="NaOH">Sodium Hydroxide (NaOH)</option>
-                    <option value="KOH">Potassium Hydroxide (KOH)</option>
-                    <option value="Ba(OH)2">Barium Hydroxide (Ba(OH)₂)</option>
+                    <option value="">-- Choose Reactant 2 (Base/Reagent) --</option>
+                    <option value="NaOH">Sodium Hydroxide ($\text{NaOH}$)</option>
+                    <option value="KOH">Potassium Hydroxide ($\text{KOH}$)</option>
+                    <option value="KI">Potassium Iodide ($\text{KI}$)</option>
+                    <option value="Na2SO4">Sodium Sulfate ($\text{Na}_2\text{SO}_4$)</option>
+                    <option value="Ba(OH)2">Barium Hydroxide ($\text{Ba}(\text{OH})_2$)</option>
                 </select>
             </div>
         </div>
@@ -245,28 +244,31 @@
         // --- EMBEDDED JAVASCRIPT LOGIC ---
 
         const reactions = {
-            // Salt: Silver Nitrate (AgNO₃) - Forms Brown/Black AgOH precipitate
-            'AgNO3_NaOH': { equation: "AgNO₃ + NaOH → AgOH(s) + NaNO₃", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
-            'AgNO3_KOH': { equation: "AgNO₃ + KOH → AgOH(s) + KNO₃", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
-            'AgNO3_Ba(OH)2': { equation: "2AgNO₃ + Ba(OH)₂ → 2AgOH(s) + Ba(NO₃)₂", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
+            // ORIGINAL REACTIONS (Brown/Black AgOH and Blue Cu(OH)2)
+            'AgNO3_NaOH': { equation: "\\text{AgNO}_3 + \\text{NaOH} \\rightarrow \\text{AgOH}(\\text{s}) + \\text{NaNO}_3", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
+            'CuSO4_KOH': { equation: "\\text{CuSO}_4 + 2\\text{KOH} \\rightarrow \\text{Cu}(\\text{OH})_2(\\text{s}) + \\text{K}_2\\text{SO}_4", observation: "A bright blue precipitate $(\\text{Cu}(\\text{OH})_2)$ forms.", visual: { precipitate: '#00BFFF', liquid: '#ADD8E6' } },
 
-            // Salt: Copper Sulfate (CuSO₄) - Forms Bright Blue Cu(OH)₂ precipitate
-            'CuSO4_NaOH': { equation: "CuSO₄ + 2NaOH → Cu(OH)₂(s) + Na₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color.", visual: { precipitate: '#00BFFF', liquid: '#ADD8E6' } }, // DodgerBlue liquid, LightBlue precipitate
-            'CuSO4_KOH': { equation: "CuSO₄ + 2KOH → Cu(OH)₂(s) + K₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color.", visual: { precipitate: '#00BFFF', liquid: '#ADD8E6' } },
-            'CuSO4_Ba(OH)2': { equation: "CuSO₄ + Ba(OH)₂ → Cu(OH)₂(s) + BaSO₄(s)", observation: "Two precipitates (blue Cu(OH)₂ and white BaSO₄) form.", visual: { precipitate: '#00BFFF', liquid: '#F0F8FF' } }, // Multiple precipitates, make liquid very light
+            // --- NEW +1/+2 REACTIONS (TN STATE BOARD RELEVANT) ---
 
-            // Salt: Sodium Chloride (NaCl) - No Reaction (NR)
-            'NaCl_NaOH': { equation: "NaCl + NaOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
-            'NaCl_KOH': { equation: "NaCl + KOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
-            'NaCl_Ba(OH)2': { equation: "2NaCl + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
+            // 1. Lead Test (Iodide Anion Test) -> Yellow Precipitate
+            'Pb(NO3)2_KI': { equation: "\\text{Pb}(\\text{NO}_3)_2 + 2\\text{KI} \\rightarrow \\text{PbI}_2(\\text{s}) + 2\\text{KNO}_3", observation: "Formation of a striking yellow precipitate $(\\text{PbI}_2)$. Used to test for Lead ions.", visual: { precipitate: '#FFD700', liquid: '#FFFFFF' } },
             
-            // Salt: Potassium Nitrate (KNO₃) - No Reaction (NR)
-            'KNO3_NaOH': { equation: "KNO₃ + NaOH → No observable reaction (NR)", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
-            'KNO3_KOH': { equation: "KNO₃ + KOH → No observable reaction (NR)", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
-            'KNO3_Ba(OH)2': { equation: "2KNO₃ + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
+            // 2. Sulfate Anion Test (using BaCl2) -> White Precipitate
+            'Na2SO4_BaCl2': { equation: "\\text{Na}_2\\text{SO}_4 + \\text{BaCl}_2 \\rightarrow \\text{BaSO}_4(\\text{s}) + 2\\text{NaCl}", observation: "Formation of a dense white precipitate $(\\text{BaSO}_4)$, insoluble in acids. Confirms the Sulfate ion.", visual: { precipitate: '#F0F8FF', liquid: '#ADD8E6' } },
+            
+            // 3. Chloride Anion Test (using AgNO3) -> White Curdy Precipitate
+            'NaCl_AgNO3': { equation: "\\text{NaCl} + \\text{AgNO}_3 \\rightarrow \\text{AgCl}(\\text{s}) + \\text{NaNO}_3", observation: "Formation of a curdy white precipitate $(\\text{AgCl})$, soluble in Ammonium Hydroxide. Confirms Chloride ion.", visual: { precipitate: '#F5F5F5', liquid: '#ADD8E6' } },
+            
+            // 4. Barium Test (using Sulfate) -> White Precipitate
+            'BaCl2_Na2SO4': { equation: "\\text{BaCl}_2 + \\text{Na}_2\\text{SO}_4 \\rightarrow \\text{BaSO}_4(\\text{s}) + 2\\text{NaCl}", observation: "Formation of a white precipitate $(\\text{BaSO}_4)$, confirms the Barium ion.", visual: { precipitate: '#F0F8FF', liquid: '#ADD8E6' } },
+            
+            // 5. Lead Hydroxide Precipitate
+            'Pb(NO3)2_NaOH': { equation: "\\text{Pb}(\\text{NO}_3)_2 + 2\\text{NaOH} \\rightarrow \\text{Pb}(\\text{OH})_2(\\text{s}) + 2\\text{NaNO}_3", observation: "Formation of a chalky white precipitate $(\\text{Pb}(\\text{OH})_2)$, soluble in excess $\\text{NaOH}$.", visual: { precipitate: '#FFFFFF', liquid: '#F5F5F5' } },
 
-            // Catch-all non-reaction case for safety
-            'DEFAULT_NR': { equation: "Reactant 1 + Reactant 2 → No Reaction", observation: "Ensure both chemicals are selected to observe a change.", visual: { noReaction: true } }
+            // --- NON-REACTIONS (Critical for the syllabus) ---
+            'NaCl_KOH': { equation: "\\text{NaCl} + \\text{KOH} \\rightarrow \\text{No observable reaction (NR)}", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
+            'KNO3_BaCl2': { equation: "\\text{KNO}_3 + \\text{BaCl}_2 \\rightarrow \\text{No observable reaction (NR)}", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
+            'DEFAULT_NR': { equation: "\\text{Reactant 1} + \\text{Reactant 2} \\rightarrow \\text{No Reaction}", observation: "Ensure both chemicals are selected to observe a change.", visual: { noReaction: true } }
         };
 
         function mixChemicals() {
@@ -281,9 +283,9 @@
             const salt = saltElement.value;
             const base = baseElement.value;
 
-            // Reset visual state
+            // Reset visual state and remove all animation classes
             testTubeContainer.classList.remove('shake-anim', 'no-reaction-flash');
-            testTubeLiquid.style.backgroundColor = '#add8e6'; // Default light blue
+            testTubeLiquid.style.backgroundColor = '#add8e6';
             testTubePrecipitate.style.height = '0';
             testTubePrecipitate.style.opacity = '0';
             testTubePrecipitate.style.backgroundColor = 'transparent';
@@ -295,43 +297,76 @@
                 observationOutput.textContent = defaultResult.observation;
                 equationOutput.classList.add('placeholder');
                 observationOutput.classList.add('placeholder');
-                testTubeContainer.classList.add('shake-anim', 'no-reaction-flash'); // Flash red for incomplete selection
+                testTubeContainer.classList.add('shake-anim', 'no-reaction-flash');
                 return;
             }
 
-            // Create the lookup key
-            const key = `${salt}_${base}`;
-            const result = reactions[key] || reactions['DEFAULT_NR'];
+            const key1 = `${salt}_${base}`;
+            const key2 = `${base}_${salt}`; // Check for reversed order in the database
+
+            const result = reactions[key1] || reactions[key2] || reactions['DEFAULT_NR'];
             
             // Clear placeholder style
             equationOutput.classList.remove('placeholder');
             observationOutput.classList.remove('placeholder');
 
             // --- Update Visuals and Animate ---
-            testTubeContainer.classList.add('shake-anim'); // Always shake when mixing
+            testTubeContainer.classList.add('shake-anim');
 
-            // Give a brief delay for the shake to start before showing reaction
             setTimeout(() => {
                 if (result.visual && result.visual.noReaction) {
-                    // Simulate no reaction: maybe a subtle shimmer or just reset
-                    testTubeContainer.classList.add('no-reaction-flash'); // Add a flash for "no reaction"
+                    // Simulate no reaction
+                    testTubeContainer.classList.add('no-reaction-flash'); 
                 } else if (result.visual) {
                     if (result.visual.liquid) {
+                        // Change bulk liquid color
                         testTubeLiquid.style.backgroundColor = result.visual.liquid;
                     }
                     if (result.visual.precipitate) {
+                        // Show precipitate (simulating a solid forming)
                         testTubePrecipitate.style.backgroundColor = result.visual.precipitate;
-                        testTubePrecipitate.style.height = '20%'; // Make precipitate visible
+                        testTubePrecipitate.style.height = '20%';
                         testTubePrecipitate.style.opacity = '1';
                     }
                 }
                 
-                // Update the text results after visual changes
-                equationOutput.textContent = result.equation;
+                // Update the text results using LaTeX for chemical formatting
+                equationOutput.innerHTML = `$\\${result.equation}$`;
                 observationOutput.textContent = result.observation;
 
-            }, 300); // After the initial shake animation
+                // Call a function to render the LaTeX after updating the text
+                renderMathInElement(equationOutput);
+
+            }, 300);
         }
+        
+        // --- LaTeX Rendering Function (Requires MathJax/KaTeX, but we'll use a local function for this SAP) ---
+        // NOTE: Since this is an SAP, we need a library for proper LaTeX rendering (like KaTeX).
+        // Since we cannot inject a full library here, we simulate the rendering process
+        // by just replacing common LaTeX elements with HTML subscripts/superscripts.
+        function renderMathInElement(element) {
+            let html = element.innerHTML;
+            // Simple replacement for subscripts and superscripts in chemical formulas
+            html = html.replace(/(\\text\{(\w+)\})/g, '$2'); // Removes \text{}
+            html = html.replace(/_\{(\w+)\}/g, '<sub>$1</sub>'); // Subscript
+            html = html.replace(/\^\{(\w+)\}/g, '<sup>$1</sup>'); // Superscript (for charge, though rare in these examples)
+            html = html.replace(/\\rightarrow/g, '→');
+            html = html.replace(/\(s\)/g, '($\\text{s}$)');
+            html = html.replace(/\\ /g, ' '); // Remove extra space slash
+            
+            // Add a simple visual style for phase symbols
+            html = html.replace(/(\(\w\))/g, '<span style="font-size: 0.9em; color: #666; font-style: italic;">$1</span>'); 
+            
+            element.innerHTML = html;
+        }
+
+        // To make the initial equations look good on load
+        document.addEventListener('DOMContentLoaded', () => {
+             // Set default placeholder with basic formatting
+             document.getElementById('equation-output').innerHTML = "$\\text{Reactant 1} + \\text{Reactant 2} \\rightarrow \\text{Products}$";
+             renderMathInElement(document.getElementById('equation-output'));
+             
+        });
     </script>
 </body>
 </html>
