@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Chemistry Lab</title>
+    <title>Gtk-Chemistry Lab</title>
 
     <style>
         /* --- EMBEDDED CSS STYLING --- */
@@ -12,6 +12,10 @@
             background-color: #e8f5e9; /* Light green background */
             text-align: center;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .container {
@@ -19,8 +23,9 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            max-width: 700px;
-            margin: 0 auto;
+            max-width: 800px;
+            margin: 0 auto 20px;
+            width: 100%;
         }
 
         h1 {
@@ -31,15 +36,18 @@
         .lab-setup {
             display: flex;
             justify-content: space-around;
-            align-items: center;
-            margin-bottom: 30px;
+            align-items: flex-start; /* Align items to top */
+            margin-bottom: 20px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
         }
 
         .chemical-input {
             padding: 15px;
             background-color: #f1f8e9;
             border-radius: 10px;
-            width: 45%;
+            width: 45%; /* Adjusted for better spacing with test tube */
+            min-width: 250px; /* Ensure readability */
+            margin-bottom: 15px; /* Spacing for wrap */
         }
 
         select {
@@ -67,12 +75,90 @@
             background-color: #0097a7;
         }
 
+        /* --- TEST TUBE VISUAL --- */
+        .test-tube-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            min-height: 200px; /* Ensure space for test tube */
+        }
+
+        .test-tube-container {
+            position: relative;
+            width: 60px; /* Width of the tube */
+            height: 180px; /* Height of the tube */
+            border: 3px solid #666;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            background-color: rgba(255, 255, 255, 0.3); /* Transparent tube */
+            overflow: hidden; /* Keep liquid inside */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-out; /* For shake effect */
+        }
+
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70%; /* Initial liquid level */
+            background-color: #add8e6; /* Light blue (default solution color) */
+            transition: background-color 1.5s ease-out, height 0.5s ease-out; /* Smooth color change */
+        }
+
+        .precipitate {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0; /* Starts hidden */
+            background-color: #8B4513; /* Brown (default precipitate color) */
+            transition: height 1.5s ease-out, background-color 1.5s ease-out;
+            opacity: 0;
+        }
+        
+        /* Reaction specific styles and animations */
+        .shake-anim {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .precipitate-anim .precipitate {
+            height: 20%; /* Precipitate rises */
+            opacity: 1;
+        }
+
+        /* Liquid color changes */
+        .color-change-blue .liquid { background-color: #1E90FF; } /* DodgerBlue */
+        .color-change-brown .liquid { background-color: #8B4513; } /* SaddleBrown */
+        .color-change-clear .liquid { background-color: rgba(255, 255, 255, 0.7); } /* Near clear */
+
+        /* No Reaction Visual */
+        .no-reaction-flash {
+            border-color: #f44336 !important; /* Red border */
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.7);
+        }
+
+
         /* --- RESULTS AREA --- */
         .reaction-results {
             margin-top: 30px;
             border-top: 2px dashed #b2dfdb;
             padding-top: 20px;
             text-align: left;
+            width: 100%;
         }
 
         .equation {
@@ -94,6 +180,16 @@
         .placeholder {
             color: #9e9e9e;
             font-style: italic;
+        }
+
+        /* Media Queries for smaller screens */
+        @media (max-width: 600px) {
+            .lab-setup {
+                flex-direction: column;
+            }
+            .chemical-input {
+                width: 90%;
+            }
         }
     </style>
 </head>
@@ -125,6 +221,13 @@
             </div>
         </div>
 
+        <div class="test-tube-area">
+            <div class="test-tube-container" id="testTubeContainer">
+                <div class="liquid" id="testTubeLiquid"></div>
+                <div class="precipitate" id="testTubePrecipitate"></div>
+            </div>
+        </div>
+
         <button onclick="mixChemicals()">Mix in Test Tube</button>
 
         <div class="reaction-results">
@@ -141,31 +244,29 @@
     <script>
         // --- EMBEDDED JAVASCRIPT LOGIC ---
 
-        // Simple database of simulated Double Displacement Reactions (Salt + Base)
-        // Key is 'Salt_Base'
         const reactions = {
-            // Salt: Silver Nitrate (AgNO₃)
-            'AgNO3_NaOH': { equation: "AgNO₃ + NaOH → AgOH(s) + NaNO₃", observation: "A brown/black precipitate (AgOH) forms immediately." },
-            'AgNO3_KOH': { equation: "AgNO₃ + KOH → AgOH(s) + KNO₃", observation: "A brown/black precipitate (AgOH) forms immediately." },
-            'AgNO3_Ba(OH)2': { equation: "2AgNO₃ + Ba(OH)₂ → 2AgOH(s) + Ba(NO₃)₂", observation: "A brown/black precipitate (AgOH) forms immediately." },
+            // Salt: Silver Nitrate (AgNO₃) - Forms Brown/Black AgOH precipitate
+            'AgNO3_NaOH': { equation: "AgNO₃ + NaOH → AgOH(s) + NaNO₃", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
+            'AgNO3_KOH': { equation: "AgNO₃ + KOH → AgOH(s) + KNO₃", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
+            'AgNO3_Ba(OH)2': { equation: "2AgNO₃ + Ba(OH)₂ → 2AgOH(s) + Ba(NO₃)₂", observation: "A brown/black precipitate (AgOH) forms immediately.", visual: { precipitate: '#8B4513', liquid: '#FFFFFF' } },
 
-            // Salt: Copper Sulfate (CuSO₄)
-            'CuSO4_NaOH': { equation: "CuSO₄ + 2NaOH → Cu(OH)₂(s) + Na₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color." },
-            'CuSO4_KOH': { equation: "CuSO₄ + 2KOH → Cu(OH)₂(s) + K₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color." },
-            'CuSO4_Ba(OH)2': { equation: "CuSO₄ + Ba(OH)₂ → Cu(OH)₂(s) + BaSO₄(s)", observation: "Two precipitates (blue Cu(OH)₂ and white BaSO₄) form." },
+            // Salt: Copper Sulfate (CuSO₄) - Forms Bright Blue Cu(OH)₂ precipitate
+            'CuSO4_NaOH': { equation: "CuSO₄ + 2NaOH → Cu(OH)₂(s) + Na₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color.", visual: { precipitate: '#00BFFF', liquid: '#ADD8E6' } }, // DodgerBlue liquid, LightBlue precipitate
+            'CuSO4_KOH': { equation: "CuSO₄ + 2KOH → Cu(OH)₂(s) + K₂SO₄", observation: "A bright blue precipitate (Cu(OH)₂) forms. Solution loses blue color.", visual: { precipitate: '#00BFFF', liquid: '#ADD8E6' } },
+            'CuSO4_Ba(OH)2': { equation: "CuSO₄ + Ba(OH)₂ → Cu(OH)₂(s) + BaSO₄(s)", observation: "Two precipitates (blue Cu(OH)₂ and white BaSO₄) form.", visual: { precipitate: '#00BFFF', liquid: '#F0F8FF' } }, // Multiple precipitates, make liquid very light
 
-            // Salt: Sodium Chloride (NaCl) - Generally non-reactive with these bases in simple lab settings
-            'NaCl_NaOH': { equation: "NaCl + NaOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water." },
-            'NaCl_KOH': { equation: "NaCl + KOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water." },
-            'NaCl_Ba(OH)2': { equation: "2NaCl + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water." },
+            // Salt: Sodium Chloride (NaCl) - No Reaction (NR)
+            'NaCl_NaOH': { equation: "NaCl + NaOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
+            'NaCl_KOH': { equation: "NaCl + KOH → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
+            'NaCl_Ba(OH)2': { equation: "2NaCl + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. Both are highly soluble in water.", visual: { noReaction: true } },
             
-            // Salt: Potassium Nitrate (KNO₃) - Generally non-reactive
-            'KNO3_NaOH': { equation: "KNO₃ + NaOH → No observable reaction (NR)", observation: "No visible change. All products are soluble." },
-            'KNO3_KOH': { equation: "KNO₃ + KOH → No observable reaction (NR)", observation: "No visible change. All products are soluble." },
-            'KNO3_Ba(OH)2': { equation: "2KNO₃ + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. All products are soluble." },
+            // Salt: Potassium Nitrate (KNO₃) - No Reaction (NR)
+            'KNO3_NaOH': { equation: "KNO₃ + NaOH → No observable reaction (NR)", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
+            'KNO3_KOH': { equation: "KNO₃ + KOH → No observable reaction (NR)", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
+            'KNO3_Ba(OH)2': { equation: "2KNO₃ + Ba(OH)₂ → No observable reaction (NR)", observation: "No visible change. All products are soluble.", visual: { noReaction: true } },
 
             // Catch-all non-reaction case for safety
-            'DEFAULT_NR': { equation: "Reactant 1 + Reactant 2 → No Reaction", observation: "Ensure both chemicals are selected to observe a change." }
+            'DEFAULT_NR': { equation: "Reactant 1 + Reactant 2 → No Reaction", observation: "Ensure both chemicals are selected to observe a change.", visual: { noReaction: true } }
         };
 
         function mixChemicals() {
@@ -173,16 +274,28 @@
             const baseElement = document.getElementById('base');
             const equationOutput = document.getElementById('equation-output');
             const observationOutput = document.getElementById('observation-output');
+            const testTubeContainer = document.getElementById('testTubeContainer');
+            const testTubeLiquid = document.getElementById('testTubeLiquid');
+            const testTubePrecipitate = document.getElementById('testTubePrecipitate');
 
             const salt = saltElement.value;
             const base = baseElement.value;
 
+            // Reset visual state
+            testTubeContainer.classList.remove('shake-anim', 'no-reaction-flash');
+            testTubeLiquid.style.backgroundColor = '#add8e6'; // Default light blue
+            testTubePrecipitate.style.height = '0';
+            testTubePrecipitate.style.opacity = '0';
+            testTubePrecipitate.style.backgroundColor = 'transparent';
+
             // Check if both chemicals are selected
             if (!salt || !base) {
-                equationOutput.textContent = reactions['DEFAULT_NR'].equation;
-                observationOutput.textContent = reactions['DEFAULT_NR'].observation;
+                const defaultResult = reactions['DEFAULT_NR'];
+                equationOutput.textContent = defaultResult.equation;
+                observationOutput.textContent = defaultResult.observation;
                 equationOutput.classList.add('placeholder');
                 observationOutput.classList.add('placeholder');
+                testTubeContainer.classList.add('shake-anim', 'no-reaction-flash'); // Flash red for incomplete selection
                 return;
             }
 
@@ -194,15 +307,30 @@
             equationOutput.classList.remove('placeholder');
             observationOutput.classList.remove('placeholder');
 
-            // Update the display
-            equationOutput.textContent = result.equation;
-            observationOutput.textContent = result.observation;
-            
-            // Optional: Visually highlight the test tube (simulated)
-            document.querySelector('.lab-setup').style.border = '2px solid #d32f2f';
+            // --- Update Visuals and Animate ---
+            testTubeContainer.classList.add('shake-anim'); // Always shake when mixing
+
+            // Give a brief delay for the shake to start before showing reaction
             setTimeout(() => {
-                document.querySelector('.lab-setup').style.border = 'none';
-            }, 1000);
+                if (result.visual && result.visual.noReaction) {
+                    // Simulate no reaction: maybe a subtle shimmer or just reset
+                    testTubeContainer.classList.add('no-reaction-flash'); // Add a flash for "no reaction"
+                } else if (result.visual) {
+                    if (result.visual.liquid) {
+                        testTubeLiquid.style.backgroundColor = result.visual.liquid;
+                    }
+                    if (result.visual.precipitate) {
+                        testTubePrecipitate.style.backgroundColor = result.visual.precipitate;
+                        testTubePrecipitate.style.height = '20%'; // Make precipitate visible
+                        testTubePrecipitate.style.opacity = '1';
+                    }
+                }
+                
+                // Update the text results after visual changes
+                equationOutput.textContent = result.equation;
+                observationOutput.textContent = result.observation;
+
+            }, 300); // After the initial shake animation
         }
     </script>
 </body>
